@@ -1,98 +1,37 @@
+// These pin numbers are the position on the Arduino board,
+// from the driver board. The Motor pins have to use the ones
+// with wavy lines, which means they are Pulse Width Modulated.
 
-volatile int rotaryCount = 0;
+int rightDirectionPin = 2; // Channel 2, DIR
+int rightMotorPin = 3;     // Channel 2, PWM
+int leftDirectionPin = 4;  // Channel 4, DIR
+int leftMotorPin = 5;      // Channel 4, PWM
 
-#define PINA 10
-#define PINB 12
-#define INTERRUPT 0  // that is, pin 2
-
-#define DIRECTIONA 2
-#define MOTORA 3
-
-#define DIRECTIONB 6
-#define MOTORB 7
-
-#define TIME_FORWARDS 10000
-#define TIME_BACKWARDS 10000
-#define TIME_TURN 1200
-
-// Interrupt Service Routine for a change to encoder pin A
-void isr ()
-{
-  boolean up;
-
-  if (digitalRead (PINA))
-    up = digitalRead (PINB);
-  else
-    up = !digitalRead (PINB);
-
-  if (up)
-    rotaryCount++;
-  else
-    rotaryCount--;
-}  // end of isr
-
-
+// All we have to do to initialize the pins,
+// and tell it we are moving forward.
 void setup()
 {
-  attachInterrupt (INTERRUPT, isr, CHANGE);   // interrupt 0 is pin 2, interrupt 1 is pin 3
-  pinMode (MOTORA, OUTPUT);
-  pinMode (DIRECTIONA, OUTPUT);
-  pinMode (MOTORB, OUTPUT);
-  pinMode (DIRECTIONB, OUTPUT);
+  pinMode(rightMotorPin, OUTPUT);
+  pinMode(rightDirectionPin, OUTPUT);
+  pinMode(leftMotorPin, OUTPUT);
+  pinMode(leftDirectionPin, OUTPUT);
+  // Only moving forward for now.
+  digitalWrite(rightDirectionPin, 1); 
+  digitalWrite(leftDirectionPin, 1); 
+}
 
-}  // end of setup
-
-byte phase;
-unsigned long start;
-int time_to_go;
-
-void loop ()
+// The function analogWrite( pin, speed ) controls the speed 0-255.
+void loop()
 {
-
-  analogWrite (MOTORA, 200);
-  analogWrite (MOTORB, 200);
-  start = millis ();
-  
-  // check current drain
-  while (millis () - start < time_to_go)
-    {
-    if (analogRead (0) > 325)  // > 1.46 amps
-      break;    
-    }
-    
-  
-  switch (phase++ & 3)
-    {
-    case 0: 
-      digitalWrite (DIRECTIONA, 1); 
-      digitalWrite (DIRECTIONB, 1); 
-      time_to_go = TIME_FORWARDS;
-      break;
-      
-    case 1: 
-      // turn
-      digitalWrite (DIRECTIONA, 1); 
-      digitalWrite (DIRECTIONB, 0); 
-      time_to_go = TIME_TURN;
-      break;
-
-    case 2: 
-      digitalWrite (DIRECTIONA, 0); 
-      digitalWrite (DIRECTIONB, 0); 
-      time_to_go = TIME_BACKWARDS;
-      break;
-
-    case 3: 
-      digitalWrite (DIRECTIONA, 0); 
-      digitalWrite (DIRECTIONB, 1); 
-      time_to_go = TIME_TURN;
-      break;
-      
-    } // end of switch
-    
-  analogWrite (MOTORA, 0);
-  analogWrite (MOTORB, 0);
-  delay (500);
-  
-}  // end of loop
+  // Go as fast as you can.
+  analogWrite(rightMotorPin, 255);
+  analogWrite(leftMotorPin, 255);
+  // For 5 seconds.
+  delay(5000);
+  // Then stop.
+  analogWrite(rightMotorPin, 0);
+  analogWrite(leftMotorPin, 0);
+  // And wait another 5 seconds.
+  delay(5000);
+}
 
